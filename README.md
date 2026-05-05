@@ -1,3 +1,5 @@
+# Microservicios-Modulo1-SeguridadyAcceso
+
 # Microservicios Conectados - Autenticación y Usuarios
 
 Este proyecto contiene dos microservicios comunicados entre sí:
@@ -73,10 +75,6 @@ curl -X POST http://localhost:8002/api/v1/auth/login \
 
 Respuesta:
 ```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer"
-}
 ```
 
 ### 2. Crear un usuario
