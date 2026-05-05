@@ -1,0 +1,194 @@
+version: "3.9"
+
+services:
+  # ════════════════════════════════════════════════════════════════════════════════
+  # MICROSERVICIO DE AUTENTICACIÓN
+  # ════════════════════════════════════════════════════════════════════════════════
+  
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: ms-autenticacion-postgres
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+    volumes:
+      - pgdata-auth:/var/lib/postgresql/data
+      - ./Microservicio_Autenticacion/Autenticacion/database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - microservicios-network
+
+  ms-autenticacion:
+    build:
+      context: ./Microservicio_Autenticacion/Autenticacion
+      dockerfile: Dockerfile
+    container_name: ms-autenticacion
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    ports:
+      - "8002:8000"
+    environment:
+      JWT_SECRET: change_this_super_secret
+      JWT_ALGORITHM: HS256
+      JWT_ISSUER: ms-autenticacion
+      AES256_KEY_B64: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DATABASE_URL: postgresql://auth:auth@postgres-auth:5432/auth_db
+      USERS_SERVICE_URL: "http://ms-usuarios:8000"
+      ROLES_SERVICE_URL: "http://ms-roles:8003"
+      HTTP_TIMEOUT_SECONDS: "3"
+      AUTH_USE_STUB_FALLBACK: "true"
+    restart: unless-stopped
+    networks:
+      - microservicios-network
+
+  # ════════════════════════════════════════════════════════════════════════════════
+  # MICROSERVICIO DE USUARIOS
+  # ════════════════════════════════════════════════════════════════════════════════
+  
+  postgres-usuarios:
+    image: postgres:15-alpine
+    container_name: ms-usuarios-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_usuarios
+    volumes:
+      - postgres-usuarios-data:/var/lib/postgresql/data
+      - ./Microservicio_Usuario/ms_usuario/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservicios-network
+
+  ms-usuarios:
+    build:
+      context: ./Microservicio_Usuario/ms_usuario
+      dockerfile: Dockerfile
+    container_name: ms-usuarios-app
+    depends_on:
+      postgres-usuarios:
+        condition: service_healthy
+      ms-autenticacion:
+        condition: service_started
+    environment:
+      # Configuración de Base de Datos
+      DB_HOST: postgres-usuarios
+      DB_PORT: 5432
+      DB_NAME: db_usuarios
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      
+      # Configuración de la aplicación
+      DEBUG_MODE: "false"
+      
+      # Tokens de autenticación (cambiar en producción)
+      AES_SECRET_KEY: your_aes_secret_key_here_change_in_production
+      USR_APP_TOKEN: your_usr_app_token_here_change_in_production
+      AUTH_APP_TOKEN: your_auth_app_token_here_change_in_production
+      ROL_APP_TOKEN: your_rol_app_token_here_change_in_production
+      NOT_APP_TOKEN: your_not_app_token_here_change_in_production
+      AUD_APP_TOKEN: your_aud_app_token_here_change_in_production
+      
+      # URLs de servicios - LOS MÁS IMPORTANTE: Usando nombres de servicio en la red
+      AUTH_SERVICE_URL: http://ms-autenticacion:8000
+      ROL_SERVICE_URL: http://ms-roles:8003
+      NOT_SERVICE_URL: http://ms-notificaciones:8004
+      AUD_SERVICE_URL: http://ms-auditoria:8005
+      
+      # Timeouts
+      TIMEOUT_AUTH: 3
+      TIMEOUT_ROL: 3
+      TIMEOUT_NOT: 1
+      TIMEOUT_AUD: 0.5
+      
+      # Bcrypt
+      BCRYPT_ROUNDS: 12
+      
+    ports:
+      - "8000:8000"
+    volumes:
+      # Para desarrollo: monta el código fuente
+      - ./Microservicio_Usuario/ms_usuario:/app
+    networks:
+      - microservicios-network
+    restart: unless-stopped
+
+  # ════════════════════════════════════════════════════════════════════════════════
+  # MICROSERVICIO DE ROLES
+  # ════════════════════════════════════════════════════════════════════════════════
+
+  postgres-roles:
+    image: postgres:15-alpine
+    container_name: ms-roles-postgres
+    environment:
+      POSTGRES_DB: db_roles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata-roles:/var/lib/postgresql/data
+      - ./Microservicio_Roles/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_roles"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservicios-network
+
+  ms-roles:
+    build:
+      context: ./Microservicio_Roles
+      dockerfile: Dockerfile
+    container_name: ms-roles-app
+    depends_on:
+      postgres-roles:
+        condition: service_healthy
+      ms-autenticacion:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:password@postgres-roles:5432/db_roles
+      AES_SECRET_KEY: your-aes-secret-key-32-chars-long!!
+      JWT_SECRET_KEY: your-jwt-secret-key-32-chars-long!!
+      JWT_ALGORITHM: HS256
+      MS_AUTENTICACION_URL: http://ms-autenticacion:8000
+      MS_AUDITORIA_URL: http://ms-auditoria:8005
+      APP_NAME: ms-roles
+      APP_VERSION: 0.1.0
+      APP_PORT: 8003
+      DEBUG: "False"
+      TIMEOUT_MS_AUTENTICACION: 3000
+      TIMEOUT_MS_AUDITORIA: 1500
+    ports:
+      - "8003:8003"
+    networks:
+      - microservicios-network
+    restart: unless-stopped
+
+# ════════════════════════════════════════════════════════════════════════════════
+# VOLÚMENES
+# ════════════════════════════════════════════════════════════════════════════════
+
+volumes:
+  pgdata-auth:
+    driver: local
+  postgres-usuarios-data:
+    driver: local
+  pgdata-roles:
+    driver: local
+
+# ════════════════════════════════════════════════════════════════════════════════
+# RED COMPARTIDA
+# ════════════════════════════════════════════════════════════════════════════════
+
+networks:
+  microservicios-network:
+    driver: bridge
