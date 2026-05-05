@@ -1,0 +1,31 @@
+# Dockerfile para PostgreSQL con inicialización personalizada
+# Microservicio de Autenticación
+
+FROM postgres:16-alpine
+
+LABEL maintainer="MS-Autenticación"
+LABEL description="PostgreSQL con esquema de autenticación preconfigurado"
+
+# Variables de entorno de PostgreSQL
+ENV POSTGRES_DB=${POSTGRES_DB:-auth_db}
+ENV POSTGRES_USER=${POSTGRES_USER:-auth}
+ENV POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-auth}
+
+
+# Configuraciones de optimización para PostgreSQL (opcional)
+# Descomenta según tus necesidades
+# RUN echo "shared_buffers = 256MB" >> /usr/local/share/postgresql/postgresql.conf.sample
+# RUN echo "max_connections = 200" >> /usr/local/share/postgresql/postgresql.conf.sample
+# RUN echo "effective_cache_size = 1GB" >> /usr/local/share/postgresql/postgresql.conf.sample
+
+# Copiar scripts de inicialización
+COPY database/init.sql /docker-entrypoint-initdb.d/01-schema.sql
+
+# Asegurarse de que el script tiene permisos correctos
+RUN chmod 644 /docker-entrypoint-initdb.d/01-schema.sql
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+    CMD pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+
+EXPOSE 5432

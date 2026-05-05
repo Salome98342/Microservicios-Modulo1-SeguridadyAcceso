@@ -1,0 +1,5 @@
+.env
+venv/
+__pycache__/
+mock_auth.py
+run_seed.py

@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ms-autenticacion-postgres
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - microservicios-network
+
+  auth:
+    build: .
+    container_name: ms-autenticacion
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8002:8000"
+    environment:
+      JWT_SECRET: change_this_super_secret
+      JWT_ALGORITHM: HS256
+      JWT_ISSUER: ms-autenticacion
+      AES256_KEY_B64: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DATABASE_URL: postgresql://auth:auth@postgres:5432/auth_db
+      USERS_SERVICE_URL: "http://ms-usuarios-app:8000"
+      ROLES_SERVICE_URL: ""
+      HTTP_TIMEOUT_SECONDS: "3"
+      AUTH_USE_STUB_FALLBACK: "true"
+    restart: unless-stopped
+    networks:
+      - microservicios-network
+
+volumes:
+  pgdata:
+
+networks:
+  microservicios-network:
+    external: true

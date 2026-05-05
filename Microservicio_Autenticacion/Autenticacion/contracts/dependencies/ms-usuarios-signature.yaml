@@ -1,0 +1,41 @@
+openapi: 3.0.3
+info:
+  title: Firma consumida - ms-usuarios
+  version: 1.0.0
+paths:
+  /internal/users/credentials/verify:
+    post:
+      summary: Validar credenciales cifradas de usuario
+      operationId: verifyUserCredentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, encrypted_password]
+              properties:
+                username:
+                  type: string
+                encrypted_password:
+                  type: string
+                request_trace_id:
+                  type: string
+      responses:
+        '200':
+          description: Credenciales validas
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user_id, status]
+                properties:
+                  user_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [ACTIVE, BLOCKED, INACTIVE]
+        '401':
+          description: Credenciales invalidas
+        '423':
+          description: Cuenta bloqueada

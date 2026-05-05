@@ -1,0 +1,143 @@
+# Docker Compose extendido con opciones avanzadas
+# Para uso en desarrollo y producción
+
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ms-autenticacion-postgres
+    
+    # Configuración de variables de entorno
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-auth_db}
+      POSTGRES_USER: ${POSTGRES_USER:-auth}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auth}
+      POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:--c shared_buffers=256MB -c max_connections=200}
+      TZ: America/Bogota
+    
+    # Puertos
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    
+    # Volúmenes
+    volumes:
+      # Datos persistentes
+      - pgdata:/var/lib/postgresql/data
+      
+      # Script de inicialización
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      
+      # Configuración personalizada (opcional)
+      # - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-auth} -d ${POSTGRES_DB:-auth_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    
+    # Reinicio automático
+    restart: unless-stopped
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Red
+    networks:
+      - auth-network
+    
+    # Seguridad
+    security_opt:
+      - no-new-privileges:true
+
+  # Servicio de administración PgAdmin (opcional para desarrollo)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ms-autenticacion-pgadmin
+    
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    networks:
+      - auth-network
+    
+    restart: unless-stopped
+    
+    # Solo en desarrollo
+    profiles:
+      - dev
+
+  # Servicio de autenticación
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ms-autenticacion
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-change_this_super_secret}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_ISSUER: ${JWT_ISSUER:-ms-autenticacion}
+      AES256_KEY_B64: ${AES256_KEY_B64:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-auth}:${POSTGRES_PASSWORD:-auth}@postgres:5432/${POSTGRES_DB:-auth_db}
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL:-}
+      ROLES_SERVICE_URL: ${ROLES_SERVICE_URL:-}
+      HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-3}
+      AUTH_USE_STUB_FALLBACK: ${AUTH_USE_STUB_FALLBACK:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    
+    ports:
+      - "${AUTH_PORT:-8002}:8000"
+    
+    volumes:
+      - ./app:/app/app:ro
+      - ./contracts:/app/contracts:ro
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    
+    restart: unless-stopped
+    
+    networks:
+      - auth-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Volúmenes
+volumes:
+  pgdata:
+    driver: local
+
+# Redes
+networks:
+  auth-network:
+    driver: bridge

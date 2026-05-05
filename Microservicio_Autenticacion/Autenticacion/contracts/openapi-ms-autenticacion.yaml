@@ -1,0 +1,205 @@
+openapi: 3.0.3
+info:
+  title: ms-autenticacion API
+  version: 1.0.0
+servers:
+  - url: https://api.local/auth
+paths:
+  /v1/auth/login:
+    post:
+      summary: Iniciar sesion
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, encrypted_password]
+              properties:
+                username:
+                  type: string
+                encrypted_password:
+                  type: string
+                ip:
+                  type: string
+                user_agent:
+                  type: string
+                request_trace_id:
+                  type: string
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                    example: Bearer
+                  session_id:
+                    type: string
+        '401':
+          description: Credenciales invalidas
+        '423':
+          description: Cuenta bloqueada
+  /v1/auth/logout:
+    post:
+      summary: Cerrar sesion
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sesion cerrada
+        '401':
+          description: Token invalido
+  /v1/auth/session/validate:
+    post:
+      summary: Validar sesion activa por token
+      operationId: validateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Resultado validacion
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [valid]
+                properties:
+                  valid:
+                    type: boolean
+                  user_id:
+                    type: string
+                  role:
+                    type: string
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+        '401':
+          description: Token invalido
+  /v1/app-tokens:
+    post:
+      summary: Crear token de aplicacion
+      operationId: createAppToken
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Token creado
+    get:
+      summary: Listar tokens de aplicacion
+      operationId: listAppTokens
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de tokens
+  /v1/app-tokens/{tokenId}:
+    put:
+      summary: Actualizar token de aplicacion
+      operationId: updateAppToken
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tokenId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token actualizado
+    delete:
+      summary: Desactivar token de aplicacion
+      operationId: disableAppToken
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tokenId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token desactivado
+  /v1/sessions:
+    get:
+      summary: Listar sesiones activas
+      operationId: listActiveSessions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sesiones activas
+  /v1/sessions/{sessionId}/force-close:
+    post:
+      summary: Cierre forzado de sesion por administrador
+      operationId: forceCloseSession
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sesion cerrada forzadamente
+  /v1/access-history:
+    get:
+      summary: Consultar historial de accesos
+      operationId: getAccessHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: event_type
+          in: query
+          schema:
+            type: string
+            enum: [LOGIN_OK, LOGOUT_OK, LOGIN_FAIL, ACCOUNT_LOCKED]
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Historial consultado
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

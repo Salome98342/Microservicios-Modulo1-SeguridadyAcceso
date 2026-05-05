@@ -1,0 +1,77 @@
+Integracion con ms-autenticacion
+
+Base URL (local):
+http://localhost:8000
+
+Endpoints minimos para integrar:
+1) POST /v1/auth/login
+2) POST /v1/auth/session/validate
+3) POST /v1/auth/logout
+
+URLs completas:
+- http://localhost:8000/v1/auth/login
+- http://localhost:8000/v1/auth/session/validate
+- http://localhost:8000/v1/auth/logout
+
+Request ejemplo: login
+POST http://localhost:8000/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "encrypted_password": "enc_admin123",
+  "ip": "127.0.0.1",
+  "user_agent": "microservicio-consumidor",
+  "request_trace_id": "trace-login-001"
+}
+
+Response ejemplo: login exitoso
+{
+  "access_token": "<JWT>",
+  "token_type": "Bearer",
+  "session_id": "<SESSION_ID>",
+  "user_id": "u-admin",
+  "role": "ADMIN",
+  "permissions": ["auth:manage", "sessions:force_close"]
+}
+
+Request ejemplo: validar sesion
+POST http://localhost:8000/v1/auth/session/validate
+Content-Type: application/json
+
+{
+  "token": "<JWT>"
+}
+
+Response ejemplo: sesion valida
+{
+  "valid": true,
+  "user_id": "u-admin",
+  "role": "ADMIN",
+  "permissions": ["auth:manage", "sessions:force_close"]
+}
+
+Response ejemplo: sesion no valida
+{
+  "valid": false,
+  "reason": "TOKEN_INVALIDATED"
+}
+
+o
+
+{
+  "valid": false,
+  "reason": "SESSION_NOT_ACTIVE"
+}
+
+Request ejemplo: logout
+POST http://localhost:8000/v1/auth/logout
+Authorization: Bearer <JWT>
+request_trace_id: trace-logout-001
+
+Regla de integracion recomendada:
+- Antes de ejecutar una operacion protegida, consumir POST /v1/auth/session/validate.
+- Si valid=false o responde 401, rechazar la operacion.
+
+Nota:
+- http://localhost:8000/docs es solo para pruebas manuales (Swagger), no para consumo por codigo.

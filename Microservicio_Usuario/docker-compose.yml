@@ -1,0 +1,85 @@
+services:
+  # Servicio de PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: ms_usuarios_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_usuarios
+    ports:
+      - "5432:5432"
+    volumes:
+      # Volumen para persistencia de datos
+      - postgres_data:/var/lib/postgresql/data
+      # Script de inicialización de la BD
+      - ./ms_usuario/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ms_network
+
+  # Servicio de la aplicación FastAPI
+  app:
+    build:
+      context: ./ms_usuario
+      dockerfile: Dockerfile
+    container_name: ms_usuarios_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Configuración de Base de Datos
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: db_usuarios
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      
+      # Configuración de la aplicación
+      DEBUG_MODE: "false"
+      
+      # Tokens de autenticación (cambiar en producción)
+      AES_SECRET_KEY: your_aes_secret_key_here_change_in_production
+      USR_APP_TOKEN: your_usr_app_token_here_change_in_production
+      AUTH_APP_TOKEN: your_auth_app_token_here_change_in_production
+      ROL_APP_TOKEN: your_rol_app_token_here_change_in_production
+      NOT_APP_TOKEN: your_not_app_token_here_change_in_production
+      AUD_APP_TOKEN: your_aud_app_token_here_change_in_production
+      
+      # URLs de servicios externos
+      AUTH_SERVICE_URL: http://ms-autenticacion:8000
+      ROL_SERVICE_URL: http://ms-roles:8003
+      NOT_SERVICE_URL: http://ms-notificaciones:8004
+      AUD_SERVICE_URL: http://ms-auditoria:8005
+      
+      # Timeouts
+      TIMEOUT_AUTH: 3
+      TIMEOUT_ROL: 3
+      TIMEOUT_NOT: 1
+      TIMEOUT_AUD: 0.5
+      
+      # Bcrypt
+      BCRYPT_ROUNDS: 12
+    ports:
+      - "8000:8000"
+    volumes:
+      # Para desarrollo: monta el código fuente
+      - ./ms_usuario:/app
+    networks:
+      - ms_network
+    restart: unless-stopped
+
+# Volúmenes
+volumes:
+  postgres_data:
+    driver: local
+
+# Red compartida para comunicación entre servicios
+networks:
+  ms_network:
+    external: true
+    name: microservicios-network

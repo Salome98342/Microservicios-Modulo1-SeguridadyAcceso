@@ -1,0 +1,37 @@
+openapi: 3.0.3
+info:
+  title: Firma consumida - ms-roles
+  version: 1.0.0
+paths:
+  /internal/roles/users/{userId}/permissions:
+    get:
+      summary: Obtener rol y permisos del usuario
+      operationId: getRoleAndPermissionsByUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: request_trace_id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rol y permisos del usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [role, permissions]
+                properties:
+                  role:
+                    type: string
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+        '404':
+          description: Usuario sin rol asignado

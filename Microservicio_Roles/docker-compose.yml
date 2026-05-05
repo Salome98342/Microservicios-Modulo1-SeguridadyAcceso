@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ms-roles-postgres
+    environment:
+      POSTGRES_DB: db_roles
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_roles"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservicios-network
+
+  roles:
+    build: .
+    container_name: ms-roles-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/db_roles
+      AES_SECRET_KEY: your-aes-secret-key-32-chars-long!!
+      JWT_SECRET_KEY: your-jwt-secret-key-32-chars-long!!
+      JWT_ALGORITHM: HS256
+      MS_AUTENTICACION_URL: http://ms-autenticacion:8000
+      MS_AUDITORIA_URL: http://ms-auditoria:8005
+      APP_NAME: ms-roles
+      APP_VERSION: 0.1.0
+      APP_PORT: 8003
+      DEBUG: "False"
+      TIMEOUT_MS_AUTENTICACION: 3000
+      TIMEOUT_MS_AUDITORIA: 1500
+    networks:
+      - microservicios-network
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  microservicios-network:
+    external: true
