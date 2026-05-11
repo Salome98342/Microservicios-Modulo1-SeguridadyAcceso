@@ -110,24 +110,68 @@ CREATE INDEX IF NOT EXISTS idx_historial_created_at ON usr_historial_estados(cre
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- Estados válidos de usuario
-ALTER TABLE usr_usuarios
-ADD CONSTRAINT chk_usuario_estado 
-CHECK (estado IN ('activo', 'inactivo', 'suspendido', 'eliminado'));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'chk_usuario_estado'
+          AND conrelid = 'usr_usuarios'::regclass
+    ) THEN
+        ALTER TABLE usr_usuarios
+        ADD CONSTRAINT chk_usuario_estado
+        CHECK (estado IN ('activo', 'inactivo', 'suspendido', 'eliminado'));
+    END IF;
+END
+$$;
 
 -- Géneros válidos
-ALTER TABLE usr_perfiles
-ADD CONSTRAINT chk_perfil_genero 
-CHECK (genero IN ('masculino', 'femenino', 'otro', 'prefiero_no_decir'));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'chk_perfil_genero'
+          AND conrelid = 'usr_perfiles'::regclass
+    ) THEN
+        ALTER TABLE usr_perfiles
+        ADD CONSTRAINT chk_perfil_genero
+        CHECK (genero IN ('masculino', 'femenino', 'otro', 'prefiero_no_decir'));
+    END IF;
+END
+$$;
 
 -- Estados válidos en historial
-ALTER TABLE usr_historial_estados
-ADD CONSTRAINT chk_historial_estado 
-CHECK (estado_nuevo IN ('activo', 'inactivo', 'suspendido', 'eliminado'));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'chk_historial_estado'
+          AND conrelid = 'usr_historial_estados'::regclass
+    ) THEN
+        ALTER TABLE usr_historial_estados
+        ADD CONSTRAINT chk_historial_estado
+        CHECK (estado_nuevo IN ('activo', 'inactivo', 'suspendido', 'eliminado'));
+    END IF;
+END
+$$;
 
 -- Canales de notificación válidos
-ALTER TABLE usr_preferencias_notificacion
-ADD CONSTRAINT chk_pref_canal 
-CHECK (canal_preferido IN ('email', 'sms', 'push'));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'chk_pref_canal'
+          AND conrelid = 'usr_preferencias_notificacion'::regclass
+    ) THEN
+        ALTER TABLE usr_preferencias_notificacion
+        ADD CONSTRAINT chk_pref_canal
+        CHECK (canal_preferido IN ('email', 'sms', 'push'));
+    END IF;
+END
+$$;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Trigger para actualizar updated_at automáticamente

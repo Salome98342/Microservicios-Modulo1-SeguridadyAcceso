@@ -12,8 +12,8 @@ async def validar_sesion_usuario(token: str, request_id: str) -> Dict[str, objec
             timeout=settings.timeout_ms_autenticacion / 1000
         ) as client:
             respuesta = await client.post(
-                f"{settings.ms_autenticacion_url}/auth/validate-session",
-                json={"user_token": token},
+                f"{settings.ms_autenticacion_url}/v1/auth/validate-session",
+                json={"token": token},
                 headers={"X-Request-ID": request_id},
             )
 

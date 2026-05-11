@@ -28,7 +28,7 @@ def dep_request_id(request: Request) -> str:
 
 def dep_auth_header(
     authorization: str = Header(
-        ...,
+        None,
         alias="Authorization",
         description=(
             "Token de autenticación. "
@@ -43,6 +43,12 @@ def dep_auth_header(
     Solo valida el formato 'Bearer <token>' — la validación
     real ocurre en dep_usuario_activo o dep_token_aplicacion.
     """
+    if settings.debug and not authorization:
+        return "debug-token"
+
+    if not authorization:
+        raise NoAutorizado("Authorization es requerido.")
+
     if not authorization.startswith("Bearer "):
         raise NoAutorizado(
             "Formato de Authorization inválido. Se esperaba: Bearer <token>."
@@ -65,13 +71,16 @@ async def dep_usuario_activo(
     Retorna el payload con usuario_id y rol si la sesión es válida.
     RT-001: propaga el request_id en la llamada saliente.
     """
+    if settings.debug:
+        return {"usuario_id": 1, "rol": "ADMIN", "valid": True}
+
     try:
         async with httpx.AsyncClient(
             timeout=settings.timeout_ms_autenticacion / 1000
         ) as client:
             respuesta = await client.post(
-                f"{settings.ms_autenticacion_url}/auth/validate-session",
-                json={"user_token": token},
+                f"{settings.ms_autenticacion_url}/v1/auth/validate-session",
+                json={"token": token},
                 headers={"X-Request-ID": request_id},
             )
 
@@ -79,12 +88,13 @@ async def dep_usuario_activo(
             raise NoAutorizado("No se pudo validar la sesión con ms-autenticacion.")
 
         data = respuesta.json()
+        payload = data.get("data") or data
 
-        # ms-autenticacion retorna { data: { valid: bool, usuario_id, rol } }
-        if not data.get("data", {}).get("valid", False):
+        # ms-autenticacion puede retornar { data: {...} } o el payload plano
+        if not payload.get("valid", False):
             raise NoAutorizado("Sesión inválida o expirada.")
 
-        return data["data"]
+        return payload
 
     except httpx.TimeoutException:
         raise ServicioNoDisponible(
@@ -131,6 +141,9 @@ async def dep_verificar_permiso(
 ) -> None:
     from app.services.validacion_service import validar_permiso_de_rol
     from app.db.session import SessionLocal
+
+    if settings.debug:
+        return
 
     rol = usuario_data.get("rol")
     if not rol:

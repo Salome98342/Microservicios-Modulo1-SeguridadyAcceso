@@ -94,6 +94,15 @@ def list_sessions_controller(
     return list_sessions(user_id)
 
 
+@router.get("/v1/sesiones")
+def list_sessions_spanish_alias_controller(
+    user_id: str | None = Query(default=None),
+    _: dict[str, Any] = Depends(require_admin),
+) -> list[dict[str, Any]]:
+    """Alias en espanol para compatibilidad con Postman."""
+    return list_sessions(user_id)
+
+
 @router.post("/v1/sessions/{session_id}/force-close")
 def force_close_session_controller(
     session_id: str,

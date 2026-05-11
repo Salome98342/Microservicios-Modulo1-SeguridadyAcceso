@@ -1,263 +1,168 @@
-# 📋 GUÍA: Configurar Postman con Autenticación + Usuarios Conectados
+# 📋 Guía real para Postman: Autenticación + Usuarios
 
-## 🎯 Objetivo
+Esta guía usa solo URLs que existen en el código actual y evita variables inventadas. Está pensada para una demo estable ante el docente.
 
-Configurar Postman para hacer peticiones a los 2 microservicios conectados:
-- **Autenticación** (http://localhost:8002)
-- **Usuarios** (http://localhost:8000)
+## 1. Base URLs
 
-Con **flujo de autenticación automático**: Login → Token → Usar en peticiones de Usuarios.
+- Autenticación: `http://localhost:8002`
+- Usuarios: `http://localhost:8000`
+- Roles: `http://localhost:8003` (solo si luego quieres probar permisos)
 
----
+## 2. Variables mínimas de Postman
 
-## 📁 PASO 1: Crear Estructura de Carpetas en Postman
+Crea un environment llamado `Microservicios Local` con estas variables:
 
-Tu colección debe quedar así:
+| Variable | Valor |
+|---|---|
+| `auth_url` | `http://localhost:8002` |
+| `usuarios_url` | `http://localhost:8000` |
+| `token` | vacío |
+| `request_id` | vacío |
 
-```
-Microservicios
-├── 📁 AUTENTICACION
-│   ├── Login
-│   ├── Validate Session
-│   ├── Refresh Token
-│   ├── Logout
-│   └── Health Check
-│
-├── 📁 USUARIOS
-│   ├── 📁 Usuarios
-│   │   ├── Crear Usuario
-│   │   ├── Consultar Usuario por ID
-│   │   ├── Consultar por Email
-│   │   └── ... (tus 12 peticiones)
-│   ├── 📁 Perfiles
-│   │   ├── Obtener Perfil Extendido
-│   │   └── Crear o Actualizar Perfil
-│   ├── 📁 Historial
-│   │   └── Obtener Historial de Estados
-│   ├── 📁 Preferencias
-│   │   ├── Obtener Preferencias
-│   │   └── Actualizar Preferencias
-│   └── 📁 Tipos Documento
-│       └── Listar Tipos de Documento
-│
-└── 📁 VARIABLES Y CONFIGURACIÓN
-    ├── Variables de Entorno
-    ├── Pre-request Scripts
-    └── Tests Globales
-```
+## 3. Flujo de demo sin errores
 
----
+### Paso 1. Health de autenticación
 
-## 🔧 PASO 2: Variables de Entorno
+- Método: `GET`
+- URL: `{{auth_url}}/api/v1/health`
 
-**En Postman: Settings → Environments → New Environment**
+### Paso 2. Health de usuarios
 
-Nombre: `Microservicios Local`
+- Método: `GET`
+- URL: `{{usuarios_url}}/api/v1/health`
 
-| Variable | Valor | Descripción |
-|----------|-------|-------------|
-| `base_url_auth` | `http://localhost:8002/api/v1` | URL de Autenticación |
-| `base_url_users` | `http://localhost:8000/api/v1` | URL de Usuarios |
-| `auth_token` | `` | (Se llena automáticamente tras login) |
-| `username_admin` | `admin` | Credencial para login |
-| `password_admin` | `admin` | Credencial para login |
-| `request_id` | `` | ID único para cada petición |
+### Paso 3. Login real en autenticación
 
----
+- Método: `POST`
+- URL: `{{auth_url}}/api/v1/auth/login`
+- Headers: `Content-Type: application/json`
+- Body:
 
-## 🔐 PASO 3: Carpeta AUTENTICACION - Endpoints
-
-### 1️⃣ **Login** (Obtener Token)
-
-```
-Método: POST
-URL: {{base_url_auth}}/auth/login
-
-Headers:
-  Content-Type: application/json
-
-Body (raw - JSON):
+```json
 {
-  "username": "{{username_admin}}",
-  "password": "{{password_admin}}"
-}
-
-Response esperada:
-{
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-  "token_type": "bearer",
-  "expires_in": 3600
+   "username": "admin",
+   "encrypted_password": "enc_admin123",
+   "ip": "127.0.0.1",
+   "user_agent": "Postman"
 }
 ```
 
-**Tests (Script post-response):**
+### Script para guardar el token
+
+Pégalo en la pestaña Tests de ese request:
+
 ```javascript
 if (pm.response.code === 200) {
-    var jsonData = pm.response.json();
-    pm.environment.set("auth_token", jsonData.token);
-    console.log("✓ Token guardado: " + jsonData.token.substring(0, 20) + "...");
-} else {
-    console.log("✗ Error en login: " + pm.response.code);
+   const body = pm.response.json();
+   pm.environment.set("token", body.access_token);
+   pm.environment.set("request_id", "REQ-" + Date.now());
 }
 ```
 
----
+### Paso 4. Validar sesión
 
-### 2️⃣ **Validate Session** (Verificar Token)
+- Método: `POST`
+- URL: `{{auth_url}}/api/v1/auth/session/validate`
+- Headers: `Content-Type: application/json`
+- Body:
 
-```
-Método: POST
-URL: {{base_url_auth}}/auth/validate-session
-
-Headers:
-  Content-Type: application/json
-  Authorization: Bearer {{auth_token}}
-
-Body (raw - JSON):
+```json
 {
-  "token": "{{auth_token}}"
+   "token": "{{token}}"
 }
+```
 
-Response esperada:
+### Paso 5. Probar la conexión real Auth -> Usuarios
+
+- Método: `POST`
+- URL: `{{usuarios_url}}/internal/users/credentials/verify`
+- Headers: `Content-Type: application/json`
+- Body:
+
+```json
 {
-  "data": {
-    "valid": true,
-    "user_id": 1,
-    "rol_id": 1
-  }
+   "username": "admin",
+   "encrypted_password": "enc_admin123",
+   "request_trace_id": "{{request_id}}"
 }
 ```
 
----
+Respuesta esperada:
 
-### 3️⃣ **Health Check**
-
-```
-Método: GET
-URL: {{base_url_auth}}/health
-
-Response esperada:
+```json
 {
-  "status": "ok"
+   "user_id": "1",
+   "status": "ACTIVE"
 }
 ```
 
----
+### Paso 6. Logout
 
-## 👥 PASO 4: Editar Carpeta USUARIOS
+- Método: `POST`
+- URL: `{{auth_url}}/api/v1/auth/logout`
+- Headers:
+   - `Authorization: Bearer {{token}}`
+   - `X-Request-ID: {{request_id}}`
 
-### **IMPORTANTE: Cambiar Variable en Todos los Endpoints**
+## 4. Rutas funcionales reales que sí existen
 
-**Antes:**
-```
-{{base_url}}/users
-```
+### Autenticación
 
-**Después:**
-```
-{{base_url_users}}/users
-```
+- `GET /api/v1/health`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/session/validate`
+- `POST /api/v1/auth/validate-session`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/app-tokens`
+- `GET /api/v1/app-tokens`
+- `PUT /api/v1/app-tokens/{token_id}`
+- `DELETE /api/v1/app-tokens/{token_id}`
+- `GET /api/v1/sessions`
+- `POST /api/v1/sessions/{session_id}/force-close`
+- `GET /api/v1/access-history`
 
-### **Agregar Autorización a Todas las Peticiones**
+### Usuarios
 
-En cada petición de Usuarios:
+- `GET /api/v1/health`
+- `GET /api/v1/users`
+- `POST /api/v1/users`
+- `GET /api/v1/users/{usuario_id}`
+- `GET /api/v1/users/by-email/{email}`
+- `PUT /api/v1/users/{usuario_id}`
+- `DELETE /api/v1/users/{usuario_id}`
+- `PATCH /api/v1/users/{usuario_id}/state`
+- `POST /api/v1/users/{usuario_id}/reactivate`
+- `GET /api/v1/users/{usuario_id}/validate`
+- `GET /api/v1/users/by-role/{rol_id}`
+- `GET /api/v1/users/stats/by-state`
+- `PATCH /api/v1/users/{usuario_id}/password`
+- `GET /api/v1/users/{usuario_id}/profile`
+- `PUT /api/v1/users/{usuario_id}/profile`
+- `GET /api/v1/users/{usuario_id}/state-history`
+- `GET /api/v1/users/{usuario_id}/notification-preferences`
+- `PUT /api/v1/users/{usuario_id}/notification-preferences`
+- `GET /api/v1/document-types`
+- `POST /internal/users/credentials/verify`
 
-**Headers:**
-```
-Authorization: Bearer {{auth_token}}
-X-Request-ID: {{$timestamp}}
-Content-Type: application/json
-```
+## 5. Qué no debes usar en la demo
 
----
+- No uses `POST /api/v1/sesiones` porque no existe en el código actual.
+- No uses `POST /api/v1/users/profiles` porque la ruta real es `PUT /api/v1/users/{usuario_id}/profile`.
+- No uses `page` o `size` en usuarios; los parámetros reales son `pagina` e `items_por_pagina`.
+- No uses `password` en login; usa `encrypted_password`.
 
-## ⚙️ PASO 5: Pre-request Script Global
+## 6. Recomendación para Postman
 
-Para generar Request ID automático en cada petición.
+Usa esta secuencia exacta para evitar errores:
 
-**En Postman: Colección → Pre-request Scripts**
+1. `GET {{auth_url}}/api/v1/health`
+2. `GET {{usuarios_url}}/api/v1/health`
+3. `POST {{auth_url}}/api/v1/auth/login`
+4. `POST {{auth_url}}/api/v1/auth/session/validate`
+5. `POST {{usuarios_url}}/internal/users/credentials/verify`
+6. `POST {{auth_url}}/api/v1/auth/logout`
 
-```javascript
-// Generar timestamp para Request-ID
-pm.environment.set("request_id", "REQ-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9));
-
-// Verificar si el token existe
-if (!pm.environment.get("auth_token")) {
-    console.warn("⚠️ No hay token. Ejecuta Login primero en la carpeta AUTENTICACION");
-}
-```
-
----
-
-## 🔄 PASO 6: Flujo de Pruebas Completo
-
-### **Primera vez:**
-
-1. **Ejecutar: Login** (carpeta AUTENTICACION)
-   - Obtiene el token y lo guarda automáticamente
-   
-2. **Ejecutar: Validate Session** (carpeta AUTENTICACION)
-   - Verifica que el token es válido
-   
-3. **Ejecutar: Cualquier petición de USUARIOS**
-   - Usará el token guardado automáticamente
-
-### **Cada vez que expire el token (~1 hora):**
-1. Vuelve a ejecutar **Login**
-2. Se puede volver a usar cualquier petición de Usuarios
-
----
-
-## 📝 PASO 7: Ejemplos de Peticiones de USUARIOS (Con Token)
-
-### **Crear Usuario**
-```
-Método: POST
-URL: {{base_url_users}}/users
-
-Headers:
-  Authorization: Bearer {{auth_token}}
-  X-Request-ID: {{request_id}}
-  Content-Type: application/json
-
-Body (raw - JSON):
-{
-  "username": "juan.perez",
-  "email": "juan@example.com",
-  "password_encrypted": "base64_encrypted_password",
-  "rol_id": 1
-}
-```
-
-### **Consultar Usuario por ID**
-```
-Método: GET
-URL: {{base_url_users}}/users/1
-
-Headers:
-  Authorization: Bearer {{auth_token}}
-  X-Request-ID: {{request_id}}
-```
-
-### **Búsqueda Avanzada con Filtros**
-```
-Método: GET
-URL: {{base_url_users}}/users?nombre=juan&estado=activo&pagina=1&items_por_pagina=10
-
-Headers:
-  Authorization: Bearer {{auth_token}}
-  X-Request-ID: {{request_id}}
-```
-
----
-
-## 🧪 PASO 8: Tests Globales para Validación
-
-**En Postman: Colección → Tests**
-
-```javascript
-// Validar que todas las peticiones tienen token
-if (!pm.request.headers.get("Authorization")) {
+Con eso demuestras claramente que autenticación y usuarios están conectados.
     console.warn("⚠️ Falta Header Authorization");
 }
 

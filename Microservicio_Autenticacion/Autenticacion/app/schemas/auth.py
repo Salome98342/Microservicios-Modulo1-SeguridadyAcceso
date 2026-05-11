@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class LoginRequest(BaseModel):
@@ -9,12 +9,11 @@ class LoginRequest(BaseModel):
     user_agent: str = Field(default="unknown")
     request_trace_id: str = Field(default="")
     
-    @field_validator('encrypted_password', mode='before')
-    @classmethod
-    def use_password_if_no_encrypted(cls, v, info):
-        if v is None and info.data.get('password'):
-            return info.data.get('password')
-        return v
+    @model_validator(mode="after")
+    def use_password_if_no_encrypted(self) -> "LoginRequest":
+        if self.encrypted_password is None and self.password:
+            self.encrypted_password = self.password
+        return self
 
 
 class ValidateSessionRequest(BaseModel):

@@ -265,7 +265,7 @@ def require_auth(authorization: str | None = Header(default=None)) -> dict[str, 
 
 
 def require_admin(auth: dict[str, Any] = Depends(require_auth)) -> dict[str, Any]:
-    role = auth["claims"].get("role")
+    role = str(auth["claims"].get("role", "")).upper()
     if role != "ADMIN":
         raise HTTPException(status_code=403, detail="Se requiere rol ADMIN")
     return auth

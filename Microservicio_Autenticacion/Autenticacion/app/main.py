@@ -23,6 +23,11 @@ def health_check_api():
     return {"status": "ok"}
 
 
+@app.get("/api/v1/health", tags=["Health Check"])
+def health_check_v1():
+    return {"status": "ok"}
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()

@@ -1,0 +1,161 @@
+{
+  "info": {
+    "_postman_id": "ms-rutas-reales-demo-20260510",
+    "name": "Microservicios - Rutas Reales Demo",
+    "description": "Coleccion minima con solo rutas reales y seguras para demostrar la conexion entre Autenticacion y Usuarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "AUTENTICACION",
+      "item": [
+        {
+          "name": "Health Auth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{auth_url}}/api/v1/health",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "health"]
+            }
+          }
+        },
+        {
+          "name": "Login Real",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('token', body.access_token);",
+                  "  pm.environment.set('request_id', 'REQ-' + Date.now());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"encrypted_password\": \"enc_admin123\",\n  \"ip\": \"127.0.0.1\",\n  \"user_agent\": \"Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_url}}/api/v1/auth/login",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Validate Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_url}}/api/v1/auth/session/validate",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "auth", "session", "validate"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "X-Request-ID",
+                "value": "{{request_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_url}}/api/v1/auth/logout",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "USUARIOS",
+      "item": [
+        {
+          "name": "Health Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuarios_url}}/api/v1/health",
+              "host": ["{{usuarios_url}}"],
+              "path": ["api", "v1", "health"]
+            }
+          }
+        },
+        {
+          "name": "Verificacion Interna para Auth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"encrypted_password\": \"enc_admin123\",\n  \"request_trace_id\": \"{{request_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/internal/users/credentials/verify",
+              "host": ["{{usuarios_url}}"],
+              "path": ["internal", "users", "credentials", "verify"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "auth_url",
+      "value": "http://localhost:8002"
+    },
+    {
+      "key": "usuarios_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "request_id",
+      "value": "REQ-LOCAL"
+    }
+  ]
+}

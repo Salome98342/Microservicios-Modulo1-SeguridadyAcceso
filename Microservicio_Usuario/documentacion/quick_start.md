@@ -37,7 +37,7 @@ psql -U db_usuarios -c "SELECT * FROM usr_tipos_documento LIMIT 1;"
 
 ---
 
-### 3️⃣ Configurar .env (1 minuto)
+ 3️⃣ Configurar .env (1 minuto)
 
 Editar el archivo `.env` con tus valores:
 
@@ -64,7 +64,7 @@ AUTH_APP_TOKEN=token_temporal
 
 ---
 
-### 4️⃣ Iniciar Servidor (1 minuto)
+ Iniciar Servidor (1 minuto)
 
 ```bash
 # Abrir PowerShell en el directorio Microservicio_Usuario
@@ -84,7 +84,7 @@ INFO:     Application startup complete.
 
 ---
 
-### 5️⃣ Probar API (acceso a documentación)
+ 5️⃣ Probar API (acceso a documentación)
 
 Abre en tu navegador:
 

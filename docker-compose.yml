@@ -15,6 +15,8 @@ services:
     volumes:
       - pgdata-auth:/var/lib/postgresql/data
       - ./Microservicio_Autenticacion/Autenticacion/database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    ports:
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
       interval: 5s
@@ -61,6 +63,8 @@ services:
     volumes:
       - postgres-usuarios-data:/var/lib/postgresql/data
       - ./Microservicio_Usuario/ms_usuario/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5434:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -89,9 +93,10 @@ services:
       
       # Configuración de la aplicación
       DEBUG_MODE: "false"
+      SKIP_ROLE_VALIDATION: "true"
       
       # Tokens de autenticación (cambiar en producción)
-      AES_SECRET_KEY: your_aes_secret_key_here_change_in_production
+      AES_SECRET_KEY: 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
       USR_APP_TOKEN: your_usr_app_token_here_change_in_production
       AUTH_APP_TOKEN: your_auth_app_token_here_change_in_production
       ROL_APP_TOKEN: your_rol_app_token_here_change_in_production
@@ -99,7 +104,7 @@ services:
       AUD_APP_TOKEN: your_aud_app_token_here_change_in_production
       
       # URLs de servicios - LOS MÁS IMPORTANTE: Usando nombres de servicio en la red
-      AUTH_SERVICE_URL: http://ms-autenticacion:8000
+      AUTH_SERVICE_URL: http://ms-autenticacion:8000/api
       ROL_SERVICE_URL: http://ms-roles:8003
       NOT_SERVICE_URL: http://ms-notificaciones:8004
       AUD_SERVICE_URL: http://ms-auditoria:8005
@@ -136,6 +141,8 @@ services:
     volumes:
       - pgdata-roles:/var/lib/postgresql/data
       - ./Microservicio_Roles/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d db_roles"]
       interval: 10s
@@ -159,12 +166,12 @@ services:
       AES_SECRET_KEY: your-aes-secret-key-32-chars-long!!
       JWT_SECRET_KEY: your-jwt-secret-key-32-chars-long!!
       JWT_ALGORITHM: HS256
-      MS_AUTENTICACION_URL: http://ms-autenticacion:8000
+      MS_AUTENTICACION_URL: http://ms-autenticacion:8000/api
       MS_AUDITORIA_URL: http://ms-auditoria:8005
       APP_NAME: ms-roles
       APP_VERSION: 0.1.0
       APP_PORT: 8003
-      DEBUG: "False"
+      DEBUG: "True"
       TIMEOUT_MS_AUTENTICACION: 3000
       TIMEOUT_MS_AUDITORIA: 1500
     ports:

@@ -10,6 +10,7 @@ from app.routers import (
     permisos,
     asignaciones_rol_permiso,
     asignaciones_usuario_rol,
+    internal,
     validacion,
     seed,
 )
@@ -29,6 +30,7 @@ app.include_router(roles.router,                    prefix="/api/v1")
 app.include_router(permisos.router,                 prefix="/api/v1")
 app.include_router(asignaciones_rol_permiso.router, prefix="/api/v1")
 app.include_router(asignaciones_usuario_rol.router, prefix="/api/v1")
+app.include_router(internal.router)
 app.include_router(validacion.router,               prefix="/api/v1")
 app.include_router(seed.router,                     prefix="/api/v1")
 
@@ -53,6 +55,13 @@ def health():
 
 @app.get("/api/health", tags=["Health Check"])
 def health_api():
+    return {
+        "status": "ok"
+    }
+
+
+@app.get("/api/v1/health", tags=["Health Check"])
+def health_api_v1():
     return {
         "status": "ok"
     }

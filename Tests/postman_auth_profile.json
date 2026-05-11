@@ -1,0 +1,506 @@
+{
+  "info": {
+    "_postman_id": "ms-auth-testing-20250510",
+    "name": "Microservicios - Seguridad y Acceso (Testing)",
+    "description": "Colección para testing de los 3 microservicios de seguridad y acceso.\nIncluye flujos completos de autenticación, creación de usuarios y gestión de permisos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "🔐 AUTENTICACIÓN",
+      "item": [
+        {
+          "name": "1️⃣  Login como ADMIN",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"token\", jsonData.data.access_token);",
+                  "    pm.environment.set(\"user_id\", jsonData.data.user_id);",
+                  "    pm.environment.set(\"username\", jsonData.data.username);",
+                  "    console.log('✅ Token guardado: ' + jsonData.data.access_token.substring(0, 20) + '...');",
+                  "} else {",
+                  "    pm.test('Login Failed', function() {",
+                  "        pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"username\\\": \\\"admin\\\",\\n  \\\"password\\\": \\\"admin123\\\",\\n  \\\"ip_origin\\\": \\\"127.0.0.1\\\",\\n  \\\"user_agent\\\": \\\"Postman\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{auth_url}}/api/v1/sesiones",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "sesiones"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2️⃣  Login como ESTUDIANTE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"token_estudiante\", jsonData.data.access_token);",
+                  "    console.log('✅ Token estudiante guardado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"username\\\": \\\"estudiante\\\",\\n  \\\"password\\\": \\\"estud123\\\",\\n  \\\"ip_origin\\\": \\\"127.0.0.1\\\",\\n  \\\"user_agent\\\": \\\"Postman\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{auth_url}}/api/v1/sesiones",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "sesiones"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3️⃣  Validar Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"token\\\": \\\"{{token}}\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{auth_url}}/api/v1/sesiones/validar",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "sesiones", "validar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4️⃣  Listar Sesiones Activas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_url}}/api/v1/sesiones",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "sesiones"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5️⃣  Logout",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{auth_url}}/api/v1/sesiones/me",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "sesiones", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👥 USUARIOS",
+      "item": [
+        {
+          "name": "1️⃣  Listar Tipos de Documento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{usuarios_url}}/api/v1/document-types",
+              "host": ["{{usuarios_url}}"],
+              "path": ["api", "v1", "document-types"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2️⃣  Listar Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{usuarios_url}}/api/v1/users?page=1&size=10",
+              "host": ["{{usuarios_url}}"],
+              "path": ["api", "v1", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3️⃣  Obtener Usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{usuarios_url}}/api/v1/users/1",
+              "host": ["{{usuarios_url}}"],
+              "path": ["api", "v1", "users", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4️⃣  Crear Nuevo Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\\\"new_user_id\\\", jsonData.data.id);",
+                  "    console.log('✅ Usuario creado con ID: ' + jsonData.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"username\\\": \\\"usuario_test_{{$timestamp}}\\\",\\n  \\\"email\\\": \\\"test_{{$timestamp}}@universidad.edu.co\\\",\\n  \\\"password\\\": \\\"password123\\\",\\n  \\\"rol_id\\\": 2,\\n  \\\"estado\\\": \\\"activo\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/api/v1/users",
+              "host": ["{{usuarios_url}}"],
+              "path": ["api", "v1", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5️⃣  Crear Perfil de Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"usuario_id\\\": {{new_user_id}},\\n  \\\"tipo_documento_id\\\": 1,\\n  \\\"numero_documento\\\": \\\"1000000100\\\",\\n  \\\"primer_nombre\\\": \\\"Juan\\\",\\n  \\\"segundo_nombre\\\": \\\"Carlos\\\",\\n  \\\"primer_apellido\\\": \\\"García\\\",\\n  \\\"segundo_apellido\\\": \\\"López\\\",\\n  \\\"fecha_nacimiento\\\": \\\"2005-06-15\\\",\\n  \\\"genero\\\": \\\"masculino\\\",\\n  \\\"direccion_residencia\\\": \\\"Calle 5 #10-20\\\",\\n  \\\"ciudad\\\": \\\"Bogotá\\\",\\n  \\\"departamento\\\": \\\"Cundinamarca\\\",\\n  \\\"telefono_movil\\\": \\\"3105555555\\\",\\n  \\\"contacto_emergencia_nombre\\\": \\\"María García\\\",\\n  \\\"contacto_emergencia_telefono\\\": \\\"3105555556\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/api/v1/users/profiles",
+              "host": ["{{usuarios_url}}"],
+              "path": ["api", "v1", "users", "profiles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6️⃣  Actualizar Usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"email\\\": \\\"actualizado@universidad.edu.co\\\",\\n  \\\"estado\\\": \\\"activo\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/api/v1/users/{{new_user_id}}",
+              "host": ["{{usuarios_url}}"],
+              "path": ["api", "v1", "users", "{{new_user_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🛡️  ROLES Y PERMISOS",
+      "item": [
+        {
+          "name": "1️⃣  Listar Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{roles_url}}/api/v1/roles",
+              "host": ["{{roles_url}}"],
+              "path": ["api", "v1", "roles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2️⃣  Obtener Rol por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{roles_url}}/api/v1/roles/1",
+              "host": ["{{roles_url}}"],
+              "path": ["api", "v1", "roles", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3️⃣  Obtener Permisos de un Rol",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{roles_url}}/api/v1/roles/1/permissions",
+              "host": ["{{roles_url}}"],
+              "path": ["api", "v1", "roles", "1", "permissions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4️⃣  Listar Permisos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{roles_url}}/api/v1/permissions",
+              "host": ["{{roles_url}}"],
+              "path": ["api", "v1", "permissions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5️⃣  Crear Rol",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"nombre\\\": \\\"rol_test_{{$timestamp}}\\\",\\n  \\\"descripcion\\\": \\\"Rol de prueba\\\",\\n  \\\"estado\\\": \\\"activo\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{roles_url}}/api/v1/roles",
+              "host": ["{{roles_url}}"],
+              "path": ["api", "v1", "roles"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏥 HEALTH CHECKS",
+      "item": [
+        {
+          "name": "Health Auth Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{auth_url}}/api/v1/health",
+              "host": ["{{auth_url}}"],
+              "path": ["api", "v1", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Usuarios Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuarios_url}}/api/v1/health",
+              "host": ["{{usuarios_url}}"],
+              "path": ["api", "v1", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Roles Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{roles_url}}/api/v1/health",
+              "host": ["{{roles_url}}"],
+              "path": ["api", "v1", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "auth_url",
+      "value": "http://localhost:8002",
+      "type": "string"
+    },
+    {
+      "key": "usuarios_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "roles_url",
+      "value": "http://localhost:8003",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_estudiante",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_user_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

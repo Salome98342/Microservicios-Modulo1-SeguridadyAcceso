@@ -58,6 +58,18 @@ def obtener_por_email_con_hash(email: str) -> Optional[dict]:
         conn.close()
 
 
+def obtener_por_username_con_hash(username: str) -> Optional[dict]:
+    """Incluye password_hash. Exclusivo para validación interna de credenciales."""
+    conn = get_connection()
+    try:
+        with get_cursor(conn) as cur:
+            cur.execute("SELECT * FROM usr_usuarios WHERE username = %s", (username,))
+            fila = cur.fetchone()
+            return dict(fila) if fila else None
+    finally:
+        conn.close()
+
+
 def existe_username(username: str, excluir_id: Optional[int] = None) -> bool:
     conn = get_connection()
     try:

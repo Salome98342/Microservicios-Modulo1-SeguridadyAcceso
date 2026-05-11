@@ -14,7 +14,7 @@ from fastapi import HTTPException, status
 from config import (
     AUTH_SERVICE_URL, ROL_SERVICE_URL, NOT_SERVICE_URL,
     AUTH_APP_TOKEN, ROL_APP_TOKEN, NOT_APP_TOKEN, USR_APP_TOKEN,
-    TIMEOUT_AUTH, TIMEOUT_ROL, TIMEOUT_NOT, DEBUG_MODE,
+    TIMEOUT_AUTH, TIMEOUT_ROL, TIMEOUT_NOT, DEBUG_MODE, SKIP_ROLE_VALIDATION,
 )
 from utils.crypto import descifrar_aes256, cifrar_aes256
 
@@ -31,7 +31,8 @@ def _cabeceras(app_token: str, request_id: str = "") -> dict:
 def _post_json(url: str, payload: dict, cabeceras: dict, timeout: float) -> dict:
     """Realiza una petición POST y retorna el JSON de respuesta."""
     data = json.dumps(payload).encode("utf-8")
-    req  = urllib_request.Request(url=url, data=data, headers=cabeceras, method="POST")
+    headers = {"Content-Type": "application/json", **cabeceras}
+    req  = urllib_request.Request(url=url, data=data, headers=headers, method="POST")
     with urllib_request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
@@ -66,11 +67,11 @@ def validar_sesion_activa(authorization: str, request_id: str) -> dict:
     token = authorization.split(" ", 1)[1]
     try:
         respuesta = _post_json(
-            url=f"{AUTH_SERVICE_URL}/api/v1/auth/validate-session",
-            payload={"token": token, "request_id": request_id},
+            url=f"{AUTH_SERVICE_URL}/v1/auth/validate-session",
+            payload={"token": token},
             cabeceras={
-                **_cabeceras(AUTH_APP_TOKEN, request_id),
                 "Authorization": authorization,
+                "X-Request-ID": request_id,
             },
             timeout=TIMEOUT_AUTH,
         )
@@ -90,13 +91,25 @@ def validar_sesion_activa(authorization: str, request_id: str) -> dict:
             detail="Servicio de autenticación no disponible"
         )
 
-    datos = respuesta.get("data", {})
+    datos = respuesta.get("data") or respuesta
     if not datos.get("valid"):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Sesión no válida o expirada"
         )
-    return {"user_id": datos["user_id"], "rol_id": datos["rol_id"]}
+
+    rol_nombre = str(datos.get("role", "")).upper()
+    rol_id = datos.get("rol_id")
+    if rol_id is None:
+        rol_id = {
+            "ADMIN": 1,
+            "DOCENTE": 3,
+            "ESTUDIANTE": 4,
+            "STAFF": 5,
+            "BASIC": 1,
+        }.get(rol_nombre, 1)
+
+    return {"user_id": datos["user_id"], "rol_id": rol_id, "role": datos.get("role")}
 
 
 # ── USR-RF-002: Validación de permisos ────────────────────────────────────────
@@ -108,6 +121,9 @@ def validar_permiso(rol_id: int, codigo_permiso: str, request_id: str) -> None:
     
     En DEBUG_MODE, siempre permite acceso.
     """
+    if SKIP_ROLE_VALIDATION:
+        return
+
     # ── DEBUG MODE: permitir todos los permisos ────────────────────────
     if DEBUG_MODE:
         return
@@ -154,6 +170,9 @@ def validar_rol_externo(rol_id: int) -> Tuple[bool, Optional[str]]:
     
     En DEBUG_MODE, siempre devuelve True sin validar.
     """
+    if SKIP_ROLE_VALIDATION:
+        return True, None
+
     # ── DEBUG MODE: permitir cualquier rol ──────────────────────────────
     if DEBUG_MODE:
         return True, None

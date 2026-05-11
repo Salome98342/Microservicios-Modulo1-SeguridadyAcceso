@@ -48,3 +48,6 @@ ITEMS_POR_PAGINA_MAX = 100
 
 # Debug Mode (desactiva autenticación para testing)
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+
+# Bypass de roles para pruebas de integración
+SKIP_ROLE_VALIDATION = os.getenv("SKIP_ROLE_VALIDATION", "false").lower() == "true"
