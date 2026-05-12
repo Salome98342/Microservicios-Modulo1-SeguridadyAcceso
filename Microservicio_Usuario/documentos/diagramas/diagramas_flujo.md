@@ -41,8 +41,10 @@ flowchart TD
     C -- Sí --> D[Obtener usuario con hash]
     D --> E[Descifrar password actual y nueva]
     E --> F[Verificar bcrypt actual]
-    F --> G[Validar política de contraseña]
-    G --> H[Guardar nuevo hash]
+    F -- Falla --> Y[401 Contraseña actual incorrecta]
+    F -- OK --> G[Validar política de contraseña]
+    G -- Falla --> Z[400 Política de contraseña no cumplida]
+    G -- OK --> H[Guardar nuevo hash]
     H --> I[Notificar user_security_alert]
     I --> J[Respuesta 200]
 ```
