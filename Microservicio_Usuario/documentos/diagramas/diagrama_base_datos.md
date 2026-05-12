@@ -82,4 +82,4 @@ erDiagram
 - `usr_historial_estados.estado_nuevo` limitado por `chk_historial_estado`.
 - `usr_preferencias_notificacion.canal_preferido` limitado por `chk_pref_canal`: `email`, `sms`, `push`.
 - El SQL define los valores permitidos de estado, pero no documenta semántica de negocio detallada para diferenciar cada estado.
-- Para reglas funcionales relacionadas con cambios de estado, revisar `../Especificación de requisitos/especificacion_requisitos.md` (REQ5 y REQ6).
+- En la API, los cambios de estado se gestionan mediante `PATCH /users/{usuario_id}/state`, `DELETE /users/{usuario_id}` (desactivación) y `POST /users/{usuario_id}/reactivate`.
