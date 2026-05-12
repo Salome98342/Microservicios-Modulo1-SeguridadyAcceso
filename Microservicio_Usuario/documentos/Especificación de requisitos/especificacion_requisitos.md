@@ -19,12 +19,12 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 | REQ7 | Reactivar usuario | El sistema permite reactivar un usuario cambiando estado a `activo`. |
 | REQ8 | Cambiar contraseña | El sistema permite al usuario autenticado cambiar su contraseña cumpliendo política de seguridad. |
 | REQ9 | Consultar perfil extendido | El sistema permite obtener perfil extendido de un usuario. |
-| REQ10 | Crear/actualizar perfil extendido | El sistema permite upsert de perfil con validación de edad mínima y datos personales. |
+| REQ10 | Crear/actualizar perfil extendido | El sistema permite upsert de perfil con validación de datos personales y edad mínima de 14 años. |
 | REQ11 | Consultar preferencias de notificación | El sistema permite consultar preferencias de notificación por usuario. |
 | REQ12 | Actualizar preferencias de notificación | El sistema permite actualizar canales y horario de no molestar con reglas de consistencia. |
 | REQ13 | Consultar historial de estados | El sistema permite consultar el historial cronológico de cambios de estado. |
 | REQ14 | Consultar catálogo de tipos de documento | El sistema expone tipos de documento activos para perfiles. |
-| REQ15 | Búsqueda avanzada de usuarios | El sistema permite búsqueda por filtros (`nombre`, `documento`, `email`, `estado`, `ciudad`) con paginación. |
+| REQ15 | Búsqueda avanzada de usuarios | El sistema permite búsqueda por filtros (`nombre`, `documento`, `email`, `estado`, `ciudad`) con paginación (por defecto `pagina=1`, `items_por_pagina=10`). |
 | REQ16 | Estadísticas de usuarios por estado | El sistema entrega total de usuarios y distribución por estado. |
 | REQ17 | Listar usuarios por rol | El sistema permite listar usuarios por `rol_id` y opcionalmente por estado, con paginación. |
 | REQ18 | Validaciones internas para autenticación | El sistema expone validación interna de existencia y verificación de credenciales para consumo inter-servicio. |
@@ -55,7 +55,7 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 **REQ5 - Cambiar estado de usuario**
 - Entradas: `usuario_id`, `estado_nuevo`, `motivo`.
 - Reglas: estado permitido (`activo`, `inactivo`, `suspendido`), motivo obligatorio.
-- Transiciones: se permite cualquier transición entre estados válidos, excepto mantener el mismo estado actual.
+- Transiciones: según la implementación actual, se permite cualquier transición entre estados válidos, excepto mantener el mismo estado actual.
 - Resultado: cambio de estado en transacción atómica con registro en historial.
 
 **REQ6 - Desactivar usuario**
