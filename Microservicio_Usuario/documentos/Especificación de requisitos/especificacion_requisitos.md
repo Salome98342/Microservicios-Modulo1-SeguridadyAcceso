@@ -87,8 +87,8 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 
 **REQ10 - Crear/actualizar perfil extendido**
 - Entradas: datos de documento, identidad, contacto y ubicación.
-- Reglas: edad mínima de 14 años.
-- Cálculo: se realiza comparación completa de fecha (año, mes y día) entre `fecha_nacimiento` y la fecha actual del servidor usando tipo `date` (validación de aplicación), manteniendo consistencia también en años bisiestos.
+- Reglas: edad mínima de 14 años (regla de negocio del sistema).
+- Cálculo: se realiza comparación completa de fecha (año, mes y día) entre `fecha_nacimiento` y la fecha actual del servidor usando tipo `date`, en la capa de validación del microservicio antes de persistir datos.
 - Error: si no cumple, la solicitud se rechaza con error de validación.
 - Resultado: perfil creado o actualizado.
 
@@ -114,9 +114,7 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 
 **REQ15 - Búsqueda avanzada de usuarios**
 - Entradas: filtros opcionales y paginación (`pagina`, `items_por_pagina`).
-- Reglas: `pagina >= 1`, `items_por_pagina` entre 1 y 100.
-- Parámetros omitidos: cuando no se envían, se aplican los valores por defecto `pagina=1` e `items_por_pagina=10`.
-- Manejo de valores inválidos: si los parámetros están fuera del rango permitido, el endpoint responde `400 Bad Request`.
+- Reglas: `pagina >= 1` y `items_por_pagina` entre 1 y 100; si se omiten, se aplican valores por defecto `pagina=1` e `items_por_pagina=10`; si están fuera de rango, el endpoint responde `400 Bad Request`.
 - Resultado: resultados paginados con totales y metadatos.
 
 **REQ16 - Estadísticas de usuarios por estado**
