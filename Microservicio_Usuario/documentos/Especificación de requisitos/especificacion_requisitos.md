@@ -55,7 +55,14 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 **REQ5 - Cambiar estado de usuario**
 - Entradas: `usuario_id`, `estado_nuevo`, `motivo`.
 - Reglas: estado permitido (`activo`, `inactivo`, `suspendido`), motivo obligatorio.
-- Transiciones permitidas: `activo→inactivo`, `activo→suspendido`, `inactivo→activo`, `inactivo→suspendido`, `suspendido→activo`, `suspendido→inactivo`; no se permite transición al mismo estado.
+- Transiciones permitidas:
+  - `activo→inactivo`
+  - `activo→suspendido`
+  - `inactivo→activo`
+  - `inactivo→suspendido`
+  - `suspendido→activo`
+  - `suspendido→inactivo`
+  - No se permite transición al mismo estado.
 - Resultado: cambio de estado en transacción atómica con registro en historial.
 
 **REQ6 - Desactivar usuario**
@@ -81,7 +88,7 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 **REQ10 - Crear/actualizar perfil extendido**
 - Entradas: datos de documento, identidad, contacto y ubicación.
 - Reglas: edad mínima de 14 años.
-- Cálculo: se compara `fecha_nacimiento` con la fecha actual del servidor usando fecha calendario (`date`), lo que mantiene consistencia también en años bisiestos.
+- Cálculo: se compara `fecha_nacimiento` con la fecha actual del servidor usando el tipo de fecha `date` (validación de aplicación), lo que mantiene consistencia también en años bisiestos.
 - Error: si no cumple, la solicitud se rechaza con error de validación.
 - Resultado: perfil creado o actualizado.
 
@@ -108,6 +115,7 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 **REQ15 - Búsqueda avanzada de usuarios**
 - Entradas: filtros opcionales y paginación (`pagina`, `items_por_pagina`).
 - Reglas: `pagina >= 1`, `items_por_pagina` entre 1 y 100.
+- Parámetros omitidos: cuando no se envían, se aplican los valores por defecto `pagina=1` e `items_por_pagina=10`.
 - Manejo de valores inválidos: si los parámetros están fuera del rango permitido, el endpoint responde `400 Bad Request`.
 - Resultado: resultados paginados con totales y metadatos.
 
