@@ -55,7 +55,7 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 **REQ5 - Cambiar estado de usuario**
 - Entradas: `usuario_id`, `estado_nuevo`, `motivo`.
 - Reglas: estado permitido (`activo`, `inactivo`, `suspendido`), motivo obligatorio.
-- Transiciones: según la implementación actual, se permite cualquier transición entre estados válidos, excepto mantener el mismo estado actual.
+- Transiciones permitidas: `activo→inactivo`, `activo→suspendido`, `inactivo→activo`, `inactivo→suspendido`, `suspendido→activo`, `suspendido→inactivo`; no se permite transición al mismo estado.
 - Resultado: cambio de estado en transacción atómica con registro en historial.
 
 **REQ6 - Desactivar usuario**
@@ -80,7 +80,7 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 
 **REQ10 - Crear/actualizar perfil extendido**
 - Entradas: datos de documento, identidad, contacto y ubicación.
-- Reglas: edad mínima de 14 años calculada desde `fecha_nacimiento` hasta la fecha actual; si no cumple, la solicitud se rechaza con error de validación.
+- Reglas: edad mínima de 14 años calculada con fecha calendario (`date`) comparando `fecha_nacimiento` con la fecha actual del servidor; aplica de forma consistente para años bisiestos por cálculo de fecha y, si no cumple, la solicitud se rechaza con error de validación.
 - Resultado: perfil creado o actualizado.
 
 **REQ11 - Consultar preferencias de notificación**
@@ -106,6 +106,7 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 **REQ15 - Búsqueda avanzada de usuarios**
 - Entradas: filtros opcionales y paginación (`pagina`, `items_por_pagina`).
 - Reglas: `pagina >= 1`, `items_por_pagina` entre 1 y 100.
+- Manejo de valores inválidos: cuando no cumple rango, el endpoint responde `400 Bad Request`.
 - Resultado: resultados paginados con totales y metadatos.
 
 **REQ16 - Estadísticas de usuarios por estado**
