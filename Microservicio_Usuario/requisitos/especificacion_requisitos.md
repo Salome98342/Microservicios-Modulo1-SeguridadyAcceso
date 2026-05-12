@@ -88,7 +88,7 @@ Los requisitos se expresan como capacidades funcionales del sistema (no como cas
 **REQ10 - Crear/actualizar perfil extendido**
 - Entradas: datos de documento, identidad, contacto y ubicación.
 - Reglas: edad mínima de 14 años.
-- Cálculo: se compara `fecha_nacimiento` con la fecha actual del servidor usando el tipo de fecha `date` (validación de aplicación), lo que mantiene consistencia también en años bisiestos.
+- Cálculo: se realiza comparación completa de fecha (año, mes y día) entre `fecha_nacimiento` y la fecha actual del servidor usando tipo `date` (validación de aplicación), manteniendo consistencia también en años bisiestos.
 - Error: si no cumple, la solicitud se rechaza con error de validación.
 - Resultado: perfil creado o actualizado.
 
