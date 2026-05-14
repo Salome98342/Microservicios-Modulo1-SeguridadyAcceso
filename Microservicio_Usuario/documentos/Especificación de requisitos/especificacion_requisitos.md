@@ -32,19 +32,22 @@ Declaración de requisitos funcionales del sistema (no como casos de uso), toman
 ### 2.2 Tablas de detalle por requisito funcional
 
 #### 2.2.1 REQ1 — Crear usuario
-| Campo | Paso | Detalle |
+
+| Código | REQ1 | |
 |---|---|---|
-| Código | REQ1 | Crear usuario |
-| Actores | - | Cliente, administrador, ms-usuarios, ms-roles |
-| Descripción | - | Permite registrar un usuario nuevo con credenciales y rol asignado. |
-| Precondición | - | El `username` y `email` no existen previamente y el `rol_id` es válido. |
-| Secuencia normal | 1 | El sistema recibe `username`, `email`, contraseña y `rol_id`. |
-| Secuencia normal | 2 | El sistema valida formato, unicidad y rol. |
-| Secuencia normal | 3 | El sistema crea el usuario con estado inicial `activo`. |
-| Secuencia alterna | 2A | Si `username` o `email` ya existen, rechaza la creación. |
-| Secuencia alterna | 2B | Si el rol no es válido, rechaza la creación. |
-| Postcondición | - | Usuario registrado y disponible para uso del sistema. |
-| Comentarios | - | La contraseña debe almacenarse con hash seguro. |
+| Nombre | Crear usuario | |
+| Actores | Cliente, administrador | |
+| Descripción | El cliente crea el usuario | |
+| Precondición | Que el usuario no este previamente registrado | |
+| Secuencia normal | Paso | Descripción |
+| | 1 | El administrador abre la aplicación |
+| | 2 | Da clic en el botón de registrar usuario |
+| Secuencia alterna | Paso | Descripción |
+| | 1.1.1 | Como la aplicación no abre contacta con el administrador de la aplicación |
+| | 1.1.2 | El administrador arregla el problema al cliente y pide que intente de nuevo |
+| | 2.1.1 | |
+| Postcondición | El usuario queda registrado y puede usar el sistema | |
+| Comentarios | | |
 
 #### 2.2.2 REQ2 — Consultar usuario por ID
 | Campo | Paso | Detalle |
