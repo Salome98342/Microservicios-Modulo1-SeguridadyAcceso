@@ -287,3 +287,105 @@ Declaración de requisitos funcionales del sistema (no como casos de uso), toman
 | | 3.2 | Si el usuario está inactivo/suspendido/eliminado, el sistema responde `423` |
 | Postcondición | Resultado de validación interna queda disponible para autenticación e integración | |
 | Comentarios | Endpoints orientados a integración interna, no a cliente final | |
+
+## 3. Cualidades del Sistema
+
+### 3.1 Usabilidad
+
+- El microservicio debe exponer documentación interactiva de API en `/docs` (Swagger UI) y `/redoc`, con contratos de entrada/salida alineados a los modelos Pydantic.
+- Todas las respuestas deben seguir un formato uniforme (`request_id`, `status`, `statusCode`, `data`, `message`) para facilitar aprendizaje y consumo por clientes.
+- Los mensajes funcionales y de error deben mantenerse en español técnico consistente para reducir ambigüedad operativa.
+- El sistema debe aceptar `X-Request-ID` y autogenerarlo cuando no esté presente, permitiendo trazabilidad simple para equipos de soporte e integración.
+
+### 3.2 Confiabilidad
+
+- El servicio debe exponer endpoints de salud `GET /` y `GET /api/v1/health` con estado `ok` para verificación de disponibilidad.
+- El cambio de estado de usuario debe ejecutarse en transacción atómica (actualización de usuario + registro en historial), con `rollback` ante fallo.
+- Las integraciones críticas con ms-autenticación y ms-roles deben fallar de forma controlada con códigos HTTP de error (`401`, `403`, `503`) sin dejar datos inconsistentes.
+- El registro de auditoría debe operar en modo resiliente: si ms-auditoría no está disponible, se debe guardar respaldo local JSONL.
+- El envío de notificaciones debe ser asíncrono y no bloquear la operación principal del usuario (fire-and-forget).
+
+### 3.3 Rendimiento
+
+- Las operaciones de lectura y escritura del dominio de usuarios deben responder en tiempo acotado por configuración de timeouts de servicios externos (`TIMEOUT_AUTH`, `TIMEOUT_ROL`, `TIMEOUT_NOT`, `TIMEOUT_AUD`).
+- Las operaciones de notificación y auditoría deben ejecutarse en hilos asíncronos para no aumentar la latencia percibida del endpoint principal.
+- La búsqueda de usuarios debe soportar paginación obligatoria con valores por defecto (`pagina=1`, `items_por_pagina=10`) y límite máximo (`items_por_pagina<=100`).
+- El servicio debe ser apto para ejecución continua en contenedores con política de reinicio `unless-stopped`.
+
+### 3.4 Soporteabilidad
+
+- La configuración operacional debe ser externalizada por variables de entorno (`.env`) para despliegue en diferentes ambientes sin cambios de código.
+- El servicio debe ser desplegable por contenedores Docker (app + PostgreSQL) y red compartida de microservicios.
+- La arquitectura debe mantenerse por capas (`routes`, `services`, `repository`, `models`, `utils`) para facilitar mantenimiento y evolución.
+- Los contratos de integración (headers, permisos, endpoints y ejemplos) deben permanecer documentados en `documentacion/rutas_y_endpoints.md`.
+- Las reglas de seguridad y cifrado (AES-256 y bcrypt) deben permanecer centralizadas en utilidades reutilizables para simplificar soporte y auditoría técnica.
+
+## 4. Interfaces del Sistema
+
+### 4.1 Interfaces de Usuario
+
+El microservicio no implementa interfaz gráfica propia para usuario final. La interacción principal es API REST y su interfaz de consulta técnica (Swagger/ReDoc).
+
+#### 4.1.1 Aspecto y Sensación
+
+- Para consumidores técnicos, la experiencia de interfaz se provee mediante Swagger UI y ReDoc con estructura estándar OpenAPI.
+- El diseño visual para usuarios finales queda delegado al cliente consumidor (frontend o aplicación externa), fuera del alcance de este microservicio.
+
+#### 4.1.2 Requisitos de Diseño y Navegación
+
+- La navegación funcional debe organizarse por recursos REST (`/users`, `/document-types`, `/internal/users`).
+- Las operaciones deben agruparse por dominios de negocio: usuarios, perfiles, historial, preferencias, tipos de documento y autenticación interna.
+- El versionado de rutas debe mantenerse bajo prefijo `/api/v1` para compatibilidad evolutiva.
+
+#### 4.1.3 Consistencia
+
+- Todas las rutas públicas deben usar JSON sobre HTTP y mantener códigos de estado consistentes (`200`, `201`, `400`, `401`, `403`, `404`, `409`, `500`, `503` según caso).
+- Debe usarse terminología uniforme en payloads y mensajes (`usuario_id`, `rol_id`, `estado`, `motivo`, `request_id`).
+- Los headers de integración deben mantenerse consistentes: `Authorization`, `X-Request-ID` y `X-App-Token` (según el tipo de endpoint).
+
+#### 4.1.4 Requisitos de Personalización y Personalización del Usuario
+
+- El sistema debe permitir personalización del usuario mediante:
+  - Perfil extendido (`/users/{usuario_id}/profile`).
+  - Preferencias de notificación (`/users/{usuario_id}/notification-preferences`), incluyendo canal preferido y horario de no molestar.
+- La entrega de datos personalizados debe restringirse por sesión/permisos o por token interno válido cuando aplique integración inter-servicio.
+
+### 4.2 Interfaces con Sistemas o Dispositivos Externos
+
+El microservicio se integra con otros microservicios y con PostgreSQL; no requiere interfaces directas con dispositivos físicos.
+
+#### 4.2.1 Interfaces de Software
+
+- **Interfaz REST pública (clientes/autenticados):**
+  - Protocolo: HTTP/1.1
+  - Formato: JSON UTF-8
+  - Base path: `/api/v1`
+  - Puerto de exposición del servicio: `8000` (contenedor app)
+- **Interfaz interna de autenticación de credenciales:**
+  - Endpoint: `POST /internal/users/credentials/verify`
+  - Propósito: validación interna para ms-autenticación
+- **Dependencias externas requeridas:**
+  - ms-autenticación: validación de sesión.
+  - ms-roles: validación de permisos y rol.
+  - ms-notificaciones: envío de notificaciones.
+  - ms-auditoría: registro de logs de auditoría.
+- **Headers y seguridad de integración:**
+  - `Authorization: Bearer <token>` para autenticación de usuario.
+  - `X-App-Token` para llamadas entre microservicios (token cifrado AES-256 con prefijo `AES256:`).
+  - `X-Request-ID` para correlación de trazas.
+
+#### 4.2.2 Interfaces de Hardware
+
+- No se definen interfaces de hardware específicas para este microservicio.
+- La ejecución objetivo es infraestructura virtualizada/contenedorizada compatible con Docker.
+
+#### 4.2.3 Interfaces de Comunicaciones
+
+- Comunicación de red síncrona mediante HTTP entre microservicios dentro de la red Docker `microservicios-network`.
+- Comunicación con base de datos PostgreSQL vía TCP (`DB_HOST`, `DB_PORT`, por defecto 5432).
+- Configuración de endpoints remotos por variables de entorno:
+  - `AUTH_SERVICE_URL`
+  - `ROL_SERVICE_URL`
+  - `NOT_SERVICE_URL`
+  - `AUD_SERVICE_URL`
+- Los tiempos máximos de espera de comunicación deben controlarse por configuración (`TIMEOUT_AUTH`, `TIMEOUT_ROL`, `TIMEOUT_NOT`, `TIMEOUT_AUD`).
