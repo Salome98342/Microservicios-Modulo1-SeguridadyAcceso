@@ -392,3 +392,54 @@ El microservicio se integra con otros microservicios y con PostgreSQL; no requie
   - `NOT_SERVICE_URL`
   - `AUD_SERVICE_URL`
 - Los tiempos máximos de espera de comunicación deben controlarse por configuración (`TIMEOUT_AUTH`, `TIMEOUT_ROL`, `TIMEOUT_NOT`, `TIMEOUT_AUD`).
+
+## 5. Reglas de Negocio
+
+Las siguientes reglas de negocio se derivan del comportamiento implementado en rutas, servicios, modelos y esquema de base de datos del microservicio de usuarios.  
+Se agrupan por clases para separar claramente las validaciones de identidad, ciclo de vida, seguridad de credenciales, consistencia de datos e integraciones entre servicios.
+
+### 5.1 Clases de reglas de negocio del microservicio de usuarios
+
+#### 5.1.1 Reglas de acceso y autorización
+
+- **RN-ACC-001 — Sesión activa obligatoria en endpoints de negocio públicos:** toda operación funcional de usuarios requiere validación de sesión activa antes de ejecutar lógica de negocio.
+- **RN-ACC-002 — Permiso funcional obligatorio:** una vez validada la sesión, el sistema debe validar el permiso específico asociado a la operación (`USR_CREATE`, `USR_READ`, `USR_UPDATE`, `USR_DELETE`, `USR_CHANGE_STATE`, `USR_REACTIVATE`, etc.).
+- **RN-ACC-003 — Exposición controlada de datos sensibles por integración interna:** el `password_hash` solo puede exponerse en flujos internos autorizados para autenticación; no debe exponerse en consultas públicas.
+
+#### 5.1.2 Reglas de validación y consistencia de datos de usuario
+
+- **RN-DAT-001 — Unicidad de identidad de cuenta:** `username` y `email` deben ser únicos en `usr_usuarios`.
+- **RN-DAT-002 — Unicidad documental de perfil:** `numero_documento` debe ser único en `usr_perfiles`.
+- **RN-DAT-003 — Actualización parcial válida:** para actualizar usuario se debe enviar al menos un campo modificable (`username`, `email` o `rol_id`).
+- **RN-DAT-004 — Existencia previa obligatoria:** operaciones sobre perfil, preferencias, estado o contraseña requieren que el usuario exista.
+- **RN-DAT-005 — Catálogo activo para documentos:** solo se permite crear/actualizar perfil con tipo de documento existente y activo.
+
+#### 5.1.3 Reglas de seguridad de credenciales
+
+- **RN-SEC-001 — Almacenamiento seguro de contraseñas:** ninguna contraseña se almacena en texto plano; se persiste únicamente `password_hash` con bcrypt.
+- **RN-SEC-002 — Recepción cifrada de credenciales:** el flujo normal requiere contraseña cifrada en AES-256 para creación y cambio de contraseña (con soporte de `password_plana` solo en `DEBUG_MODE`).
+- **RN-SEC-003 — Verificación de contraseña actual:** para cambio de contraseña se debe validar primero la contraseña vigente.
+- **RN-SEC-004 — Política mínima de complejidad:** la nueva contraseña debe cumplir mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número.
+- **RN-SEC-005 — Restricción de auto-gestión de contraseña:** solo el propio usuario autenticado puede cambiar su contraseña.
+
+#### 5.1.4 Reglas de ciclo de vida y estados de usuario
+
+- **RN-EST-001 — Estados operativos permitidos en API:** los cambios de estado se restringen a `activo`, `inactivo` y `suspendido`.
+- **RN-EST-002 — Motivo obligatorio de transición:** toda desactivación, reactivación o cambio de estado debe incluir motivo explícito.
+- **RN-EST-003 — Prohibición de transición redundante:** no se permite cambiar a un estado igual al estado actual.
+- **RN-EST-004 — Trazabilidad obligatoria de estados:** cada transición válida debe registrarse en historial con estado anterior, estado nuevo, motivo y usuario modificador.
+- **RN-EST-005 — Atomicidad de transición + historial:** la actualización de estado y el registro del historial deben ejecutarse en una sola transacción.
+
+#### 5.1.5 Reglas de preferencias y experiencia operativa
+
+- **RN-PREF-001 — Valores por defecto de preferencias:** si el usuario no tiene configuración guardada, el sistema retorna preferencias predeterminadas.
+- **RN-PREF-002 — Consistencia de horario de no molestar:** si se configura horario, deben enviarse inicio y fin; además el inicio debe ser anterior al fin.
+- **RN-PREF-003 — Canal de notificación válido:** el canal preferido debe pertenecer al conjunto permitido (`email`, `sms`, `push`).
+- **RN-PREF-004 — Paginación acotada:** las búsquedas paginadas deben respetar límites configurados de tamaño de página para proteger desempeño.
+
+#### 5.1.6 Reglas de integración entre microservicios
+
+- **RN-INT-001 — Validación externa de rol:** al crear o actualizar usuario con `rol_id`, el sistema valida existencia del rol en ms-roles (salvo configuración explícita de omisión).
+- **RN-INT-002 — Notificación de eventos relevantes:** eventos como creación de usuario o cambio de estado disparan notificaciones asíncronas a ms-notificaciones.
+- **RN-INT-003 — Auditoría distribuida:** cada operación registra trazas estructuradas y correlacionadas por `X-Request-ID` para auditoría.
+- **RN-INT-004 — Validación interna para autenticación:** el endpoint interno de verificación de credenciales retorna resultado normalizado para ms-autenticación y bloquea usuarios inactivos/suspendidos/eliminados.
