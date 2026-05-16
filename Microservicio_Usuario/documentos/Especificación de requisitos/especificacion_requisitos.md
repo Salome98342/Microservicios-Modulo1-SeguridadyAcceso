@@ -2,12 +2,13 @@
 
 ## 1. Introducción
 
-Este documento consolida requisitos funcionales del **Microservicio de Usuarios** basados en el código actual del servicio (`ms_usuario`), sus rutas, servicios y persistencia.  
-El alcance se limita a funcionalidades implementadas para gestión de usuarios, perfiles, preferencias de notificación, historial de estado, tipos de documento y validaciones internas para autenticación.
+Este documento consolida los requisitos funcionales del **Microservicio de Usuarios** a partir del comportamiento implementado en el código (`ms_usuario`), sus rutas, servicios y capa de persistencia.  
+El alcance se limita a funcionalidades disponibles para gestión de usuarios, perfiles, preferencias de notificación, historial de estados, tipos de documento y validaciones internas de autenticación.
 
 ## 2. Requisitos Funcionales a Nivel del Sistema
 
-Declaración de requisitos funcionales del sistema (no como casos de uso), tomando únicamente comportamiento verificable en el código del microservicio.
+Declaración de requisitos funcionales del sistema (no expresados como casos de uso), tomando únicamente comportamiento verificable en el código del microservicio.
+La matriz y las tablas de detalle mantienen trazabilidad con endpoints, validaciones y reglas de negocio implementadas.
 
 ### 2.1 Matriz de requisitos funcionales
 
@@ -37,17 +38,19 @@ Declaración de requisitos funcionales del sistema (no como casos de uso), toman
 |---|---|---|
 | Nombre | Crear usuario | |
 | Actores | Cliente, administrador | |
-| Descripción | El cliente crea el usuario | |
-| Precondición | Que el usuario no este previamente registrado | |
+| Descripción | Permite registrar un nuevo usuario con `username`, `email`, contraseña cifrada y `rol_id` válido | |
+| Precondición | Sesión activa con permiso `USR_CREATE`; `username` y `email` no registrados; contraseña suministrada (`password_encrypted` o `password_plana` solo en `DEBUG_MODE`) | |
 | Secuencia normal | Paso | Descripción |
-| | 1 | El administrador abre la aplicación |
-| | 2 | Da clic en el botón de registrar usuario |
+| | 1 | El cliente envía `POST /users` con los datos requeridos |
+| | 2 | El sistema valida sesión, permiso, unicidad de `username`/`email` y validez de `rol_id` |
+| | 3 | El sistema procesa la contraseña, genera `password_hash`, crea el usuario con estado inicial `activo` y retorna `201` |
+| | 4 | El sistema registra auditoría y dispara notificación de bienvenida de forma asíncrona |
 | Secuencia alterna | Paso | Descripción |
-| | 1.1.1 | Como la aplicación no abre contacta con el administrador de la aplicación |
-| | 1.1.2 | El administrador arregla el problema al cliente y pide que intente de nuevo |
-| | 2.1.1 | |
+| | 2.1 | Si `username` o `email` ya existen, el sistema rechaza la solicitud |
+| | 2.2 | Si `rol_id` es inválido o el servicio de roles no está disponible, el sistema rechaza la operación |
+| | 3.1 | Si la contraseña no puede procesarse, el sistema responde error de validación |
 | Postcondición | El usuario queda registrado y puede usar el sistema | |
-| Comentarios | | |
+| Comentarios | El endpoint no expone `password_hash` y mantiene trazabilidad por `request_id` | |
 
 #### 2.2.2 REQ2 — Consultar usuario por ID
 | Código | REQ2 | |
@@ -281,7 +284,7 @@ Declaración de requisitos funcionales del sistema (no como casos de uso), toman
 | | 1 | Para existencia, se invoca `GET /users/{usuario_id}/validate` |
 | | 2 | El sistema responde si existe e incluye `estado`, `user_id` y `username` cuando aplica |
 | | 3 | Para credenciales, se invoca `POST /internal/users/credentials/verify` con `username` y `encrypted_password` |
-| | 4 | El sistema verifica hash de contraseña y estado del usuario (`ACTIVE` o `BLOCKED`) |
+| | 4 | El sistema verifica hash de contraseña y retorna estado interno (`ACTIVE` o `BLOCKED`) |
 | Secuencia alterna | Paso | Descripción |
 | | 3.1 | Si credenciales son inválidas, el sistema responde `401` |
 | | 3.2 | Si el usuario está inactivo/suspendido/eliminado, el sistema responde `423` |
@@ -343,7 +346,7 @@ El microservicio no implementa interfaz gráfica propia para usuario final. La i
 - Debe usarse terminología uniforme en payloads y mensajes (`usuario_id`, `rol_id`, `estado`, `motivo`, `request_id`).
 - Los headers de integración deben mantenerse consistentes: `Authorization`, `X-Request-ID` y `X-App-Token` (según el tipo de endpoint).
 
-#### 4.1.4 Requisitos de Personalización y Personalización del Usuario
+#### 4.1.4 Requisitos de personalización del usuario
 
 - El sistema debe permitir personalización del usuario mediante:
   - Perfil extendido (`/users/{usuario_id}/profile`).
