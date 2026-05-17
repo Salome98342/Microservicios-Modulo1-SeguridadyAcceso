@@ -351,7 +351,7 @@ Características de dimensionamiento y desempeño observables:
 
 Contribución arquitectónica a atributos de calidad:
 
-- **Seguridad:** validación de sesión/permisos, cifrado AES-256 para datos sensibles en tránsito, bcrypt para almacenamiento de contraseñas, separación de endpoint interno para hash.
+- **Seguridad:** validación de sesión/permisos, cifrado AES-256-CBC implementado para datos sensibles en tránsito, bcrypt para almacenamiento de contraseñas, separación de endpoint interno para hash.
 - **Confiabilidad:** transacciones atómicas en cambio de estado, rollback en fallos SQL, respaldo local de auditoría cuando ms-auditoria no responde.
 - **Mantenibilidad:** separación en capas claras (`routes/services/repository/models/utils`) y contratos tipados con Pydantic.
 - **Interoperabilidad:** comunicación REST JSON estandarizada con otros microservicios y uso de `X-App-Token`/`X-Request-ID`.
