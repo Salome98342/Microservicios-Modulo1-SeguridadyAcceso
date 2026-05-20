@@ -202,8 +202,25 @@ documentacion/
 ├── 🏛️ arquitectura_y_diagramas.md ⭐
 │   └─ Flujos, estados, integraciones
 │
-└── 🧪 ejemplos_curl.md
-   └─ 18 ejemplos cURL + testing
+├── 🧪 ejemplos_curl.md
+│   └─ 18 ejemplos cURL + testing
+│
+├── 📂 diagramas/
+│   ├─ diagrama_base_datos.md
+│   ├─ diagrama_clases.md
+│   ├─ diagramas_flujo.md
+│   └─ diagramas_secuencia.md
+│
+├── 📂 requisitos/
+│   └─ especificacion_requisitos.md
+│
+└── 📂 desarrollo/
+    ├─ documento.md
+    ├─ guiaIA.md
+    ├─ ms-usuarios_diseno_integracion.md
+    ├─ ms-usuarios_modelo_datos.md
+    ├─ ms-usuarios_requisitos.md
+    └─ ms-usuarios_requisitos_funcionales_detallados.md
 ```
 
 ---
@@ -373,7 +390,7 @@ Todos los requisitos están **100% implementados**:
 ## 📊 Estadísticas de Documentación
 
 ```
-Total de archivos:    6 archivos MD
+Total de archivos:    17 archivos MD
 Total de líneas:      ~3,000 líneas
 Endpoints documentados: 19 endpoints
 Tablas documentadas:   5 tablas
@@ -410,4 +427,3 @@ Mantenedor:   Equipo de Desarrollo
 **Última actualización:** 19 de Abril de 2026 📅  
 **Versión:** 1.0.0 ✅  
 **Estado:** Producción lista 🚀
-
