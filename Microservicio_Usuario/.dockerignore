@@ -44,7 +44,6 @@ docker-compose.yml
 
 # Documentación
 documentacion/
-Documentos de desarrollo/
 
 # Otros
 *.md

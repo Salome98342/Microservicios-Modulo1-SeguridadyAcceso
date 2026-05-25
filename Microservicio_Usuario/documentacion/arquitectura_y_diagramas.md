@@ -529,12 +529,10 @@ ms_usuario/
 │   ├── README.md                        # Índice y descripción general
 │   ├── modelo_relacional.md             # Diagrama ER y descripción de tablas
 │   ├── rutas_y_endpoints.md             # API Reference completa
-│   └── arquitectura_y_diagramas.md      # Este archivo
-│
-└── Documentos de desarrollo/            # Documentación de requisitos
-    ├── ms-usuarios_requisitos.md
-    ├── ms-usuarios_modelo_datos.md
-    └── ms-usuarios_guia_desarrollo_completa_v2.md
+│   ├── arquitectura_y_diagramas.md      # Este archivo
+│   ├── diagramas/                       # Diagramas técnicos adicionales
+│   ├── requisitos/                      # Especificación de requisitos
+│   └── desarrollo/                      # Documentos de desarrollo funcional y datos
 
 ```
 
@@ -567,4 +565,3 @@ ms_usuario/
 - [ ] Logs centralizados configurados
 - [ ] Backups de BD programados
 - [ ] Monitoreo de performance activo
-

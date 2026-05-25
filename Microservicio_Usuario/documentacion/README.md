@@ -18,9 +18,14 @@ Este microservicio gestiona todo lo relacionado con la administración de usuari
 ```
 documentacion/
 ├── README.md                    (este archivo)
+├── INDEX.md                     (mapa de navegación)
 ├── modelo_relacional.md         (Diagrama ER y descripción de tablas)
 ├── rutas_y_endpoints.md         (API Reference completa)
-└── Nota: la guía de desarrollo completa se encuentra en `ms_usuario/ms-usuarios_guia_desarrollo_completa_v2.md`
+├── arquitectura_y_diagramas.md  (arquitectura y flujos)
+├── quick_start.md               (inicio rápido)
+├── diagramas/                   (diagramas técnicos adicionales)
+├── requisitos/                  (especificación de requisitos)
+└── desarrollo/                  (documentos de desarrollo funcional y de datos)
 ```
 
 ---
@@ -370,4 +375,3 @@ curl -X GET "http://localhost:8000/api/v1/users?nombre=john&ciudad=Bogota&pagina
 **Última actualización:** 19 de Abril de 2026  
 **Versión:** 1.0.0  
 **Estado:** ✅ Completo y funcional
-
