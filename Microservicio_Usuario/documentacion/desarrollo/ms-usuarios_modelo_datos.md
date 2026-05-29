@@ -77,4 +77,4 @@ Reglas:
 ## 6. Datos semilla
 
 Catálogo inicial recomendado para `usr_tipos_documento`:
-`CC` (Cédula de Ciudadanía), `PA` (Pasaporte), `CE` (Cédula de Extranjería), `TI` (Tarjeta de Identidad), `PEP`, `NIT`, `OTR`.
+`CC` (Cédula de Ciudadanía), `PA` (Pasaporte), `CE` (Cédula de Extranjería), `TI` (Tarjeta de Identidad), `PEP` (Permiso de Entrada y Permanencia), `NIT` (Número de Identificación Tributaria), `OTR` (Otro tipo de documento).
