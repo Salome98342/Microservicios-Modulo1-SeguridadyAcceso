@@ -43,9 +43,9 @@ Documento actualizado con base en:
 - Historial de estado y tipos de documento.
 
 ### 3.2 Consumo interno entre microservicios
-- `GET /users/{usuario_id}/validate` (validación de existencia).
-- `POST /internal/users/credentials/verify` (validación interna de credenciales).
-- `GET /users/by-email/{email}` con token interno para ms-autenticación (incluye hash cuando aplica).
+- `GET /api/v1/users/{usuario_id}/validate` (validación de existencia).
+- `POST /api/v1/internal/users/credentials/verify` (validación interna de credenciales).
+- `GET /api/v1/users/by-email/{email}` con token interno para ms-autenticación (incluye hash cuando aplica).
 - consulta de perfil/preferencias por ms-notificaciones usando token de aplicación.
 
 ## 4. Seguridad de integración
@@ -83,20 +83,20 @@ Documento actualizado con base en:
 
 ## 7. Endpoints de integración principales
 
-- `POST /users`
-- `GET /users/{usuario_id}`
-- `GET /users/by-email/{email}`
-- `PUT /users/{usuario_id}`
-- `PATCH /users/{usuario_id}/state`
-- `DELETE /users/{usuario_id}`
-- `POST /users/{usuario_id}/reactivate`
-- `PATCH /users/{usuario_id}/password`
-- `GET/PUT /users/{usuario_id}/profile`
-- `GET/PUT /users/{usuario_id}/notification-preferences`
-- `GET /users/{usuario_id}/state-history`
-- `GET /document-types`
-- `GET /users` (búsqueda)
-- `GET /users/by-role/{rol_id}`
-- `GET /users/stats/by-state`
-- `GET /users/{usuario_id}/validate`
-- `POST /internal/users/credentials/verify`
+- `POST /api/v1/users`
+- `GET /api/v1/users/{usuario_id}`
+- `GET /api/v1/users/by-email/{email}`
+- `PUT /api/v1/users/{usuario_id}`
+- `PATCH /api/v1/users/{usuario_id}/state`
+- `DELETE /api/v1/users/{usuario_id}`
+- `POST /api/v1/users/{usuario_id}/reactivate`
+- `PATCH /api/v1/users/{usuario_id}/password`
+- `GET/PUT /api/v1/users/{usuario_id}/profile`
+- `GET/PUT /api/v1/users/{usuario_id}/notification-preferences`
+- `GET /api/v1/users/{usuario_id}/state-history`
+- `GET /api/v1/document-types`
+- `GET /api/v1/users` (búsqueda)
+- `GET /api/v1/users/by-role/{rol_id}`
+- `GET /api/v1/users/stats/by-state`
+- `GET /api/v1/users/{usuario_id}/validate`
+- `POST /api/v1/internal/users/credentials/verify`

@@ -6,21 +6,21 @@ Documento consolidado desde `documentacion/requisitos/especificacion_requisitos.
 
 | REQ | Endpoint(s) principal(es) |
 |---|---|
-| REQ1 | `POST /users` |
-| REQ2 | `GET /users/{usuario_id}` |
-| REQ3 | `GET /users/by-email/{email}` |
-| REQ4 | `PUT /users/{usuario_id}` |
-| REQ5 | `PATCH /users/{usuario_id}/state` |
-| REQ6 | `DELETE /users/{usuario_id}`, `POST /users/{usuario_id}/reactivate` |
-| REQ7 | `PATCH /users/{usuario_id}/password` |
-| REQ8 | `GET/PUT /users/{usuario_id}/profile` |
-| REQ9 | `GET/PUT /users/{usuario_id}/notification-preferences` |
-| REQ10 | `GET /users/{usuario_id}/state-history` |
-| REQ11 | `GET /document-types` |
-| REQ12 | `GET /users` (filtros + paginación) |
-| REQ13 | `GET /users/stats/by-state` |
-| REQ14 | `GET /users/by-role/{rol_id}` |
-| REQ15 | `GET /users/{usuario_id}/validate`, `POST /internal/users/credentials/verify` |
+| REQ1 | `POST /api/v1/users` |
+| REQ2 | `GET /api/v1/users/{usuario_id}` |
+| REQ3 | `GET /api/v1/users/by-email/{email}` |
+| REQ4 | `PUT /api/v1/users/{usuario_id}` |
+| REQ5 | `PATCH /api/v1/users/{usuario_id}/state` |
+| REQ6 | `DELETE /api/v1/users/{usuario_id}`, `POST /api/v1/users/{usuario_id}/reactivate` |
+| REQ7 | `PATCH /api/v1/users/{usuario_id}/password` |
+| REQ8 | `GET/PUT /api/v1/users/{usuario_id}/profile` |
+| REQ9 | `GET/PUT /api/v1/users/{usuario_id}/notification-preferences` |
+| REQ10 | `GET /api/v1/users/{usuario_id}/state-history` |
+| REQ11 | `GET /api/v1/document-types` |
+| REQ12 | `GET /api/v1/users` (filtros + paginación) |
+| REQ13 | `GET /api/v1/users/stats/by-state` |
+| REQ14 | `GET /api/v1/users/by-role/{rol_id}` |
+| REQ15 | `GET /api/v1/users/{usuario_id}/validate`, `POST /api/v1/internal/users/credentials/verify` |
 
 ## Detalle por requisito
 

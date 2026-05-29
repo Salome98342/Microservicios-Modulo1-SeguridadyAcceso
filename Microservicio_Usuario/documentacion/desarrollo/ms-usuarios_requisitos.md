@@ -40,7 +40,7 @@ El microservicio **ms-usuarios** gestiona:
 2. Contraseñas en tránsito cifradas (AES-256) y almacenamiento en hash bcrypt.
 3. `request_id` obligatorio para trazabilidad (se reutiliza o genera automáticamente).
 4. Auditoría JSON asíncrona (no bloqueante) con fallback local si falla ms-auditoría.
-5. Estados válidos: `activo`, `inactivo`, `suspendido`, `eliminado`.
+5. Estados funcionales para operación: `activo`, `inactivo`, `suspendido`; adicionalmente el estado técnico `eliminado` se usa en flujos de soft delete registrados en base de datos.
 6. Formato de respuesta estándar: `request_id`, `status`, `statusCode`, `data`, `message`.
 
 ## 4. Datos clave del dominio
