@@ -51,7 +51,7 @@ Documento actualizado con base en:
 ## 4. Seguridad de integración
 
 ### 4.1 Headers
-- `Authorization: ****** para rutas protegidas.
+- Header `Authorization` requerido en rutas protegidas.
 - `X-App-Token` para integración inter-servicio.
 - `X-Request-ID` para trazabilidad distribuida.
 
