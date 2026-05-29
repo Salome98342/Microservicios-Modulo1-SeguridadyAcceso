@@ -14,7 +14,7 @@ Documento actualizado con base en:
 ### 2.1 ms-autenticacion
 - **Propósito:** validar sesión activa.
 - **Uso:** antes de ejecutar endpoints protegidos.
-- **Entrada mínima:** token ****** usuario.
+- **Entrada mínima:** token de usuario.
 - **Salida esperada:** `user_id`, `rol_id`, sesión válida/invalidada.
 - **Errores manejados:** `401`, timeout/servicio no disponible.
 
